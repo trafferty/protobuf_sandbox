@@ -38,6 +38,7 @@ all: \
      bin/server
 
 clean:
+	$(RM) src/compileStats.h
 	$(RM) -r src/.obj
 	$(RM) -r bin
 
