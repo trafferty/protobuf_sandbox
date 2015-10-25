@@ -32,8 +32,6 @@ public:
 
     bool init(cJSON* config);
 
-    void SetBuildStats(std::string buildStats);
-
     bool Start();
     bool doWork();
     bool Shutdown();
