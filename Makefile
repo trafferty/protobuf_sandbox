@@ -38,7 +38,8 @@ UTIL_OBJS = \
     src/.obj/cJSON.o \
     src/.obj/CNT_JSON.o
 
-DRIVERS = \
+OBJS = \
+    src/.obj/payload.pb.o \
     src/.obj/LinuxSocket.o \
     src/.obj/SocketTransport.o \
     src/.obj/CommandProcessor.o
@@ -48,7 +49,7 @@ all: \
      src/.obj \
      bin \
      $(UTIL_OBJS) \
-     $(DRIVERS) \
+     $(OBJS) \
      bin/client \
      bin/server
 
@@ -68,9 +69,11 @@ compileStats:
 	uname -a |  awk '{print "  const char *compiled_note = \"" $$0"\";"}' >> src/compileStats.h;
 	echo "}" >> src/compileStats.h
 
-# compile proto file
-proto: src/payload.proto
-	$(PROTOC)  --cpp_out=./ $<
+# compile proto file and obj
+src/payload.pb.cc src/payload.pb.h: src/payload.proto
+	$(PROTOC) --proto_path=$(dir $^) --cpp_out=$(dir $^) $^  
+src/.obj/payload.pb.o: src/payload.pb.cc src/payload.pb.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
 
 # compile util objs
 src/.obj/cJSON.o: src/cJSON.c src/cJSON.h
@@ -79,22 +82,28 @@ src/.obj/CNT_JSON.o: src/CNT_JSON.c src/CNT_JSON.h
 	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
 
 # compile Driver objs 
-src/.obj/LinuxSocket.o: src/LinuxSocket.cpp include/LinuxSocket.h
+src/.obj/LinuxSocket.o: src/LinuxSocket.cpp src/LinuxSocket.h
 	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
 
-src/.obj/SocketTransport.o: src/SocketTransport.cpp include/SocketTransport.h
+src/.obj/SocketTransport.o: src/SocketTransport.cpp src/SocketTransport.h
 	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES) 
 
-src/.obj/CommandProcessor.o: src/CommandProcessor.cpp include/CommandProcessor.h
+src/.obj/CommandProcessor.o: src/CommandProcessor.cpp src/CommandProcessor.h
 	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES) 
 
 # compile exe objs
 src/.obj/server.o: src/server.cpp
 	$(CPP) $(CFLAGS)  -c $< -o $@
 
+src/.obj/client.o: src/client.cpp
+	$(CPP) $(CFLAGS)  -c $< -o $@
+
 # link bins
-bin/server: $(OBJS)
-	$(LD) $(LDFLAGS) -rdynamic -o $@ $(OBJS) $(LIBS)
+bin/client: src/.obj/client.o $(UTIL_OBJS) $(OBJS)
+	$(LD) -o $@ $(LDFLAGS) src/.obj/client.o $(UTIL_OBJS) $(OBJS) $(PROTOBUF_LIBS)
+	
+bin/server: src/.obj/server.o $(UTIL_OBJS) $(OBJS)
+	$(LD) -o $@ $(LDFLAGS) src/.obj/server.o $(UTIL_OBJS) $(OBJS) $(PROTOBUF_LIBS)
 
 src/.obj:
 	$(MKDIR) src/.obj
