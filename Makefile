@@ -19,31 +19,44 @@ LDFLAGS =
 
 SOFLAGS =-W -WALL -pipe
 
+PROTOBUF_CFLAGS = $(shell pkg-config --cflags protobuf)
+PROTOBUF_LIBS   = $(shell pkg-config --libs protobuf)
+
 #commands
 RM = /bin/rm -f
 MKDIR=/bin/mkdir -p
 CPDIR=/bin/cp -r
 CPFILE=/bin/cp
 AR=/usr/bin/ar
+PROTOC=protoc
 
-OBJS = \
-	src/.obj/LinuxSocket.o \
-    src/.obj/server.o
+INCLUDES=\
+	$(PROTOBUF_CFLAGS) \
+	-I./src
+
+UTIL_OBJS = \
+    src/.obj/cJSON.o \
+    src/.obj/CNT_JSON.o
+
+DRIVERS = \
+    src/.obj/LinuxSocket.o \
+    src/.obj/SocketTransport.o \
+    src/.obj/CommandProcessor.o
 
 all: \
      compileStats \
      src/.obj \
      bin \
-     $(OBJS) \
+     $(UTIL_OBJS) \
+     $(DRIVERS) \
+     bin/client \
      bin/server
 
 clean:
 	$(RM) src/compileStats.h
 	$(RM) -r src/.obj
+	$(RM) -r src/*.pb.*
 	$(RM) -r bin
-
-clean_all: clean
-	$(RM) -r lib
 
 compileStats:
 	echo "extern \"C\" {" > src/compileStats.h;
@@ -55,13 +68,31 @@ compileStats:
 	uname -a |  awk '{print "  const char *compiled_note = \"" $$0"\";"}' >> src/compileStats.h;
 	echo "}" >> src/compileStats.h
 
-# compile imgAPO objs 
-src/.obj/LinuxSocket.o: src/LinuxSocket.cpp
-	$(CPP) $(CFLAGS) -c $< -o $@
+# compile proto file
+proto: src/payload.proto
+	$(PROTOC)  --cpp_out=./ $<
 
+# compile util objs
+src/.obj/cJSON.o: src/cJSON.c src/cJSON.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
+src/.obj/CNT_JSON.o: src/CNT_JSON.c src/CNT_JSON.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
+
+# compile Driver objs 
+src/.obj/LinuxSocket.o: src/LinuxSocket.cpp include/LinuxSocket.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES)
+
+src/.obj/SocketTransport.o: src/SocketTransport.cpp include/SocketTransport.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES) 
+
+src/.obj/CommandProcessor.o: src/CommandProcessor.cpp include/CommandProcessor.h
+	$(CPP) -c $< -o $@ $(CFLAGS) $(INCLUDES) 
+
+# compile exe objs
 src/.obj/server.o: src/server.cpp
 	$(CPP) $(CFLAGS)  -c $< -o $@
 
+# link bins
 bin/server: $(OBJS)
 	$(LD) $(LDFLAGS) -rdynamic -o $@ $(OBJS) $(LIBS)
 
