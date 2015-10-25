@@ -1,1 +1,5 @@
 bin
+*.pb.*
+.cproject
+.project
+compileStats.h
