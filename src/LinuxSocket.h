@@ -22,7 +22,7 @@
 //#include <unistd.h>
 //#include <sys/types.h>
 //#include <sys/socket.h>
-//#include <netinet/in.h>
+#include <netinet/in.h>
 
 
 #include "Logger.h"
@@ -42,7 +42,7 @@ class  LinuxSocket : public ISocket
              LinuxSocket(const char* name, const bool debug = false);
     virtual ~LinuxSocket();
 
-    bool Init(ConnectionMode_t mode, const std::string IPAddress, const int port); 
+    bool init(ConnectionMode_t mode, const std::string IPAddress, const int port); 
 
     bool RegisterRecvCallback(int callbackID, ICallback* callbackPtr);
 
@@ -62,30 +62,33 @@ class  LinuxSocket : public ISocket
 
     bool getConnectionState(ISocket::ConnectionState_t &state );
 
+    std::string GetName();
+
   protected:
     bool m_Debug;
     std::string m_Name;
     std::shared_ptr<Logger> m_Log;
 
     std::string m_IPAddress;
+    int m_Port;
     bool m_LineMode;
 
     ISocket::ConnectionMode_t m_ConnectionMode;
     ISocket::ConnectionState_t m_ConnectionState;
 
-    int m_ServerListenerPort;
     int m_ConnectTimeoutSeconds;
 
     int m_ServerSock;
     int m_ClientSock;
 
-    struct sockaddr_in m_server_addr; // Socket Struct
-    struct sockaddr_in m_client_addr; // Socket Struct
+    sockaddr_in m_server_addr; // Socket Struct
+    sockaddr_in m_client_addr; // Socket Struct
 
     struct timeval m_readTimeout;
 
     ICallback* m_RecvCallbackPtr;
 
+    bool reconnect();
 };
 
 #endif

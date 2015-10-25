@@ -34,7 +34,7 @@ public:
         STATE_CONNECTED
     };
 
-    virtual bool Init(ConnectionMode_t mode, const std::string IPAddress, const int port) = 0; 
+    virtual bool init(ConnectionMode_t mode, const std::string IPAddress, const int port) = 0; 
 
     virtual bool readLine(char* rcvBuffer, int buffer_length, int& numRead, double timeout_s = 1.0, bool stopOnDisconnect = false) = 0;
     virtual bool readBlock(char* rcvBuffer, int buffer_length, int& numRead, double timeout_s = 1.0) = 0;
@@ -50,8 +50,9 @@ public:
     virtual bool ResetConnection () = 0;
     virtual bool CloseConnection () = 0;
 
-
     virtual bool getConnectionState(ConnectionState_t &state ) = 0;
+
+    virtual std::string GetName() = 0;
 
 };
 
