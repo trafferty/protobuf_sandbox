@@ -1,0 +1,30 @@
+syntax = "proto2";
+package sandbox;
+
+message Command {
+  required int32 id = 1;
+  required string method = 2;
+}
+
+
+message Response {
+  required int32 id = 1;
+  optional Result result = 2;
+  
+  message Result {
+    optional Success success = 1;
+    optional Status status = 2;
+    optional double contact_radius = 3;
+    repeated double center_point = 4;
+  }
+
+  enum Status {
+    OK = 0;
+    ERROR = 1;
+  }
+  
+  enum Success {
+    TRUE = 0;
+    FALSE = 1;
+  }
+}
