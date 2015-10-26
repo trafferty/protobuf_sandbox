@@ -4,6 +4,7 @@
 #include "ISocket.h"
 #include "LinuxSocket.h"
 #include "SocketTransport.h"
+#include "payload.pb.h"
 
 // from common:
 #include "CNT_JSON.h"
